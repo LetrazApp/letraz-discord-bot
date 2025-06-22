@@ -1,0 +1,163 @@
+docs {
+  # Letraz Discord Bot API Collection
+  
+  This is a [Bruno](https://www.usebruno.com/) API collection for testing and interacting with the Letraz Discord Bot API, powered by FastAPI.
+  
+  ## 📁 Collection Overview
+  
+  This collection provides ready-to-use HTTP requests for all available endpoints in the Letraz Discord Bot API.
+  
+  ## 🔧 Setup Instructions
+  
+  ### 1. Install Bruno
+  - Download Bruno from [https://www.usebruno.com/](https://www.usebruno.com/)
+  - Or install via package manager:
+    ```bash
+    # macOS
+    brew install bruno
+    
+    # Windows
+    choco install bruno
+    
+    # Linux
+    snap install bruno
+    ```
+  
+  ### 2. Import Collection
+  1. Open Bruno
+  2. Click "Open Collection"
+  3. Navigate to this `apis/` folder
+  4. Bruno will automatically load the collection
+  
+  ### 3. Configure Environment Variables
+  
+  #### Required Variables
+  Set these in the Bruno environment (`environments/Letraz Discord Bot.bru`):
+  
+  | Variable | Description | Example |
+  |----------|-------------|---------|
+  | `HOST_URL` | API server URL | `http://localhost:4000` |
+  | `BOT_TOKEN` | Bearer token for authentication | `your-secret-bearer-token` |
+  
+  #### Setting Secret Variables
+  1. In Bruno, go to the environment settings
+  2. Add `BOT_TOKEN` as a secret variable
+  3. Enter your actual bearer token value
+  
+  ## 🌍 Environment Configuration
+  
+  ### Default Environment: "Letraz Discord Bot"
+  
+  The collection includes a pre-configured environment with:
+  
+  - **HOST_URL**: `http://localhost:4000` (default development server)
+  - **BOT_TOKEN**: Secret variable for authentication
+  
+  ### Creating Additional Environments
+  
+  You can create additional environments for different deployment stages:
+  
+  1. **Development**
+     ```
+     HOST_URL: http://localhost:4000
+     BOT_TOKEN: dev-bearer-token
+     ```
+  
+  2. **Staging**
+     ```
+     HOST_URL: https://staging-api.yourdomain.com
+     BOT_TOKEN: staging-bearer-token
+     ```
+  
+  3. **Production**
+     ```
+     HOST_URL: https://api.yourdomain.com
+     BOT_TOKEN: production-bearer-token
+     ```
+  
+  ## 🔍 API Documentation
+  
+  ### Interactive Documentation
+  When your bot is running, you can access:
+  
+  - **Swagger UI**: [http://localhost:4000/docs](http://localhost:4000/docs)
+  - **ReDoc**: [http://localhost:4000/redoc](http://localhost:4000/redoc)
+  - **OpenAPI JSON**: [http://localhost:4000/openapi.json](http://localhost:4000/openapi.json)
+  
+  ### Authentication
+  All protected endpoints require a Bearer token in the Authorization header:
+  ```
+  Authorization: Bearer your-secret-token
+  ```
+  
+  ## 📝 Tips & Best Practices
+  
+  ### Security
+  - **Never commit secret tokens** to version control
+  - Use environment-specific tokens
+  - Rotate tokens regularly
+  
+  ### Testing
+  - Always start with the health check
+  - Test error scenarios (invalid data, wrong tokens)
+  - Verify Discord messages are received
+  
+  ### Debugging
+  - Check Bruno's response panel for detailed error messages
+  - Use the API documentation at `/docs` for reference
+  - Check the bot logs for Discord-related errors
+  
+  ## 🚀 Advanced Usage
+  
+  ### Scripting with Bruno
+  You can use Bruno's pre-request and post-response scripts for advanced workflows:
+  
+  ```javascript
+  // Pre-request script example
+  req.setHeader('X-Request-ID', Date.now().toString());
+  
+  // Post-response script example
+  if (res.status === 200) {
+    bru.setEnvVar('last_success', new Date().toISOString());
+  }
+  ```
+  
+  ### Environment Variables in Scripts
+  ```javascript
+  // Access environment variables
+  const hostUrl = bru.getEnvVar('HOST_URL');
+  const token = bru.getEnvVar('BOT_TOKEN');
+  ```
+  
+  ## 🆘 Troubleshooting
+  
+  ### Common Issues
+  
+  1. **401 Unauthorized**
+     - Check if BOT_TOKEN is set correctly
+     - Verify token matches the one in your `.env` file
+  
+  2. **404 Channel Not Found**
+     - Verify channel_id is correct
+     - Check if bot has access to the channel
+  
+  3. **Connection Refused**
+     - Ensure the bot is running (`uv run python main.py`)
+     - Check if HOST_URL is correct
+  
+  4. **Validation Errors**
+     - Check field requirements (title/message_content not empty)
+     - Verify URL formats for learn_more/image_url
+  
+  ### Getting Help
+  
+  - Check the main project README for setup instructions
+  - Review FastAPI documentation at `/docs`
+  - Check Discord bot logs for detailed error messages
+  
+  ---
+  
+  **Collection Version:** 1.0  
+  **Last Updated:** 2025-06-22  
+  **Compatible with:** Letraz Discord Bot API v1.0.0
+}
