@@ -5,7 +5,7 @@ A Discord bot that provides announcement webhooks and automated member role assi
 """
 
 from bot.discord_bot import create_bot
-from api.flask_app import start_flask_thread
+from api.fastapi_app import start_fastapi_thread
 from config import Config
 
 def main():
@@ -19,8 +19,8 @@ def main():
         bot = create_bot()
         print("Discord bot created successfully")
         
-        # Start Flask API server in background thread
-        start_flask_thread(bot)
+        # Start FastAPI server in background thread
+        start_fastapi_thread(bot)
         
         # Start Discord bot (this blocks)
         print("Starting Discord bot...")

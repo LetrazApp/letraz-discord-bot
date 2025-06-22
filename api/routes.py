@@ -1,62 +1,62 @@
-from flask import request, jsonify, Blueprint
+from fastapi import APIRouter, HTTPException, Depends, status
 from discord.ext import commands
-from api.auth import require_bearer_token
-from api.models import AnnouncementRequest, EmbedBuilder
+from api.auth import require_auth
+from api.models import AnnouncementRequest, AnnouncementResponse, EmbedBuilder
 from config import Config
 
-# Create Blueprint for API routes
-api_bp = Blueprint('api', __name__)
-
-def create_routes(bot: commands.Bot):
-    """Create API routes with access to the Discord bot instance"""
+def create_routes(bot: commands.Bot) -> APIRouter:
+    """Create FastAPI routes with access to the Discord bot instance"""
     
-    @api_bp.route('/main/announcement', methods=['POST'])
-    @require_bearer_token
-    def webhook():
+    router = APIRouter()
+    
+    @router.post(
+        "/main/announcement",
+        response_model=AnnouncementResponse,
+        status_code=status.HTTP_200_OK,
+        summary="Send Discord Announcement",
+        description="Send a rich embed announcement to a Discord channel",
+        responses={
+            200: {"description": "Announcement sent successfully"},
+            400: {"description": "Invalid request data"},
+            401: {"description": "Unauthorized - Invalid bearer token"},
+            404: {"description": "Channel not found"},
+            500: {"description": "Internal server error"},
+        }
+    )
+    async def send_announcement(
+        announcement: AnnouncementRequest,
+        _: str = require_auth()
+    ) -> AnnouncementResponse:
         """Handle announcement webhook requests"""
         try:
-            data = request.get_json()
-            if not data:
-                return jsonify({
-                    "status": "Failed", 
-                    "reason": "Invalid JSON data"
-                }), 400
-            
-            # Parse and validate request
-            announcement = AnnouncementRequest.from_json(data)
-            is_valid, error_message = announcement.validate()
-            
-            if not is_valid:
-                return jsonify({
-                    "status": "Failed", 
-                    "reason": error_message
-                }), 400
-            
             # Get target channel
             channel_id = announcement.channel_id or Config.DEFAULT_CHANNEL_ID
             channel = bot.get_channel(int(channel_id))
             
             if not channel:
-                return jsonify({
-                    "status": "Failed", 
-                    "reason": "Invalid channel ID"
-                }), 400
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Invalid channel ID - channel not found"
+                )
             
             # Create and send embed
             embed = EmbedBuilder.create_announcement_embed(announcement)
             bot.loop.create_task(channel.send(embed=embed))
             
-            return jsonify({"status": "Success"}), 200
+            return AnnouncementResponse(
+                status="Success",
+                message="Announcement sent successfully"
+            )
             
         except ValueError as e:
-            return jsonify({
-                "status": "Failed", 
-                "reason": f"Invalid data: {str(e)}"
-            }), 400
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid data: {str(e)}"
+            )
         except Exception as e:
-            return jsonify({
-                "status": "Failed", 
-                "reason": f"Internal server error: {str(e)}"
-            }), 500
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Internal server error: {str(e)}"
+            )
     
-    return api_bp 
+    return router 

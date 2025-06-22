@@ -1,37 +1,36 @@
-from dataclasses import dataclass
+from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional
 import discord
 from config import Config
 
-@dataclass
-class AnnouncementRequest:
-    """Data class for announcement API request"""
-    title: str
-    message_content: str
-    channel_id: Optional[str] = None
-    learn_more: Optional[str] = None
-    image_url: Optional[str] = None
+class AnnouncementRequest(BaseModel):
+    """Pydantic model for announcement API request"""
+    title: str = Field(..., min_length=1, max_length=256, description="The announcement title")
+    message_content: str = Field(..., min_length=1, max_length=4096, description="The main announcement message")
+    channel_id: Optional[str] = Field(None, description="Discord channel ID (uses default if not provided)")
+    learn_more: Optional[HttpUrl] = Field(None, description="Optional URL for 'Learn More' link")
+    image_url: Optional[HttpUrl] = Field(None, description="Optional image URL for the embed")
     
-    @classmethod
-    def from_json(cls, data: dict):
-        """Create AnnouncementRequest from JSON data"""
-        return cls(
-            title=data.get("title"),
-            message_content=data.get("message_content"),
-            channel_id=data.get("channel_id"),
-            learn_more=data.get("learn_more"),
-            image_url=data.get("image_url")
-        )
-    
-    def validate(self) -> tuple[bool, str]:
-        """Validate the announcement request data"""
-        if not self.title:
-            return False, "Title is required"
-        
-        if not self.message_content:
-            return False, "Message content is required"
-        
-        return True, ""
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "title": "Important Announcement",
+                "message_content": "This is an important message for the community.",
+                "channel_id": "123456789012345678",
+                "learn_more": "https://example.com/details",
+                "image_url": "https://example.com/image.png"
+            }
+        }
+
+class AnnouncementResponse(BaseModel):
+    """Response model for announcement API"""
+    status: str = Field(..., description="Status of the request")
+    message: Optional[str] = Field(None, description="Additional information")
+
+class HealthResponse(BaseModel):
+    """Health check response model"""
+    status: str = Field(..., description="Health status")
+    service: str = Field(..., description="Service name")
 
 class EmbedBuilder:
     """Helper class to build Discord embeds for announcements"""
@@ -46,12 +45,12 @@ class EmbedBuilder:
         
         # Set description with optional learn more link
         if request.learn_more:
-            embed.description = f"{request.message_content}\n\n[Learn More]({request.learn_more})"
+            embed.description = f"{request.message_content}\n\n[Learn More]({str(request.learn_more)})"
         else:
             embed.description = request.message_content
         
         # Set image if provided
         if request.image_url:
-            embed.set_image(url=request.image_url)
+            embed.set_image(url=str(request.image_url))
         
         return embed 

@@ -1,26 +1,33 @@
-from flask import request, jsonify
-from functools import wraps
+from fastapi import HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from config import Config
 
-def require_bearer_token(f):
-    """Decorator to require valid Bearer token authentication"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
-        
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({
-                "status": "Unauthorized", 
-                "reason": "You are not authorized."
-            }), 401
+# Initialize the security scheme
+security = HTTPBearer()
 
-        token = auth_header.split(' ')[1]
-        if token != Config.BEARER_TOKEN:
-            return jsonify({
-                "status": "Unauthorized", 
-                "reason": "Invalid Bearer token"
-            }), 401
-
-        return f(*args, **kwargs)
+async def verify_bearer_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
+    """
+    FastAPI dependency to verify Bearer token authentication
     
-    return decorated_function 
+    Args:
+        credentials: HTTP Authorization credentials from request header
+        
+    Returns:
+        The valid token string
+        
+    Raises:
+        HTTPException: If token is invalid or missing
+    """
+    if credentials.credentials != Config.BEARER_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Bearer token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    return credentials.credentials
+
+# For backward compatibility and ease of use
+def require_auth():
+    """Shorthand dependency for requiring authentication"""
+    return Depends(verify_bearer_token) 
