@@ -1,0 +1,23 @@
+meta {
+  name: Send Discord Announcement
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:4000/main/announcement
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{BOT_TOKEN}}
+}
+
+body:json {
+  {
+    "title": "Example title",
+    "message_content": "Example message content",
+    "channel_id": "1326243512404152393"
+  }
+}
